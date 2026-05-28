@@ -1,0 +1,108 @@
+const express = require('express');
+const { Pool } = require('pg');
+const fs = require('fs');
+
+let config = { db: {}, port: 8000 };
+try {
+    const configPath = fs.existsSync('/etc/mywebapp/config.json') ? '/etc/mywebapp/config.json' : './config.json';
+    config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+} catch (err) {
+    console.warn('Config file not found. Falling back to environment variables.');
+}
+
+const app = express();
+const pool = new Pool({
+    user: process.env.DB_USER || config.db.user,
+    host: process.env.DB_HOST || config.db.host,
+    database: process.env.DB_NAME || config.db.database,
+    password: process.env.DB_PASSWORD || config.db.password,
+    port: process.env.DB_PORT || config.db.port
+});
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+const sendResponse = (req, res, data, htmlBuilder) => {
+    const accept = req.get('Accept') || '';
+    if (accept.includes('text/html')) {
+        res.send(htmlBuilder(data));
+    } else {
+        res.json(data);
+    }
+};
+
+app.get('/', (req, res) => {
+    res.send(`
+        <!DOCTYPE html>
+        <html><body>
+        <h1>Simple Inventory API</h1>
+        <ul>
+            <li>GET /items</li>
+            <li>POST /items</li>
+            <li>GET /items/:id</li>
+        </ul>
+        </body></html>
+    `);
+});
+
+app.get('/health/alive', (req, res) => res.status(200).send('OK'));
+
+app.get('/health/ready', async (req, res) => {
+    try {
+        await pool.query('SELECT 1');
+        res.status(200).send('OK');
+    } catch (err) {
+        res.status(500).send('Database connection failed');
+    }
+});
+
+app.get('/items', async (req, res) => {
+    try {
+        // Додали quantity у SELECT
+        const { rows } = await pool.query('SELECT id, name, quantity FROM items');
+        sendResponse(req, res, rows, (data) => {
+            // Додали quantity у відображення рядків таблиці
+            const trs = data.map(i => `<tr><td>${i.id}</td><td>${i.name}</td><td>${i.quantity}</td></tr>`).join('');
+            // Додали заголовок Quantity у таблицю
+            return `<table border="1"><tr><th>ID</th><th>Name</th><th>Quantity</th></tr>${trs}</table>`;
+        });
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
+});
+
+app.get('/items/:id', async (req, res) => {
+    try {
+        const { rows } = await pool.query('SELECT id, name, quantity, created_at FROM items WHERE id = $1', [req.params.id]);
+        if (rows.length === 0) return res.status(404).send('Item not found');
+        
+        sendResponse(req, res, rows[0], (data) => {
+            return `<table border="1">
+                <tr><th>ID</th><td>${data.id}</td></tr>
+                <tr><th>Name</th><td>${data.name}</td></tr>
+                <tr><th>Quantity</th><td>${data.quantity}</td></tr>
+                <tr><th>Created At</th><td>${data.created_at}</td></tr>
+            </table>`;
+        });
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
+});
+
+app.post('/items', async (req, res) => {
+    const { name, quantity } = req.body;
+    if (!name || quantity === undefined) {
+        return res.status(400).send('Name and quantity are required');
+    }
+    try {
+        await pool.query('INSERT INTO items (name, quantity) VALUES ($1, $2)', [name, quantity]);
+        res.status(201).send('Created');
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
+});
+
+const port = process.env.PORT || config.port;
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Web app listening on 0.0.0.0:${port}`);
+});

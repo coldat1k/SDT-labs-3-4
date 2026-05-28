@@ -1,0 +1,25 @@
+networks:
+  backend-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+
+services:
+  db:
+    image: postgres:15-alpine
+    networks: [backend-net]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    environment:
+      POSTGRES_PASSWORD: password
+
+  app:
+    build: .
+    networks: [backend-net]
+    depends_on: [db]
+
+  nginx:
+    image: nginx:alpine
+    networks: [backend-net]
+    ports: ["80:80"]
+    depends_on: [app]
