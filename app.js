@@ -58,12 +58,9 @@ app.get('/health/ready', async (req, res) => {
 
 app.get('/items', async (req, res) => {
     try {
-        // Додали quantity у SELECT
         const { rows } = await pool.query('SELECT id, name, quantity FROM items');
         sendResponse(req, res, rows, (data) => {
-            // Додали quantity у відображення рядків таблиці
             const trs = data.map(i => `<tr><td>${i.id}</td><td>${i.name}</td><td>${i.quantity}</td></tr>`).join('');
-            // Додали заголовок Quantity у таблицю
             return `<table border="1"><tr><th>ID</th><th>Name</th><th>Quantity</th></tr>${trs}</table>`;
         });
     } catch (err) {
@@ -103,6 +100,10 @@ app.post('/items', async (req, res) => {
 });
 
 const port = process.env.PORT || config.port;
-app.listen(port, '0.0.0.0', () => {
-    console.log(`Web app listening on 0.0.0.0:${port}`);
-});
+if (require.main === module) {
+    app.listen(port, '0.0.0.0', () => {
+        console.log(`Web app listening on 0.0.0.0:${port}`);
+    });
+}
+
+module.exports = app;
