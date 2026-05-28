@@ -1,17 +1,19 @@
 {
-  "name": "sdt-labs-3-4",
+  "name": "mywebapp",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Simple Inventory API for Lab 3",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js",
+    "lint": "eslint .",
+    "test": "jest --coverage"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/coldat1k/SDT-labs-3-4.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Savytskyi Yurii IM-44",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/coldat1k/SDT-labs-3-4/issues"
@@ -25,5 +27,16 @@
     "eslint": "^8.57.1",
     "jest": "^30.4.2",
     "supertest": "^7.2.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageThreshold": {
+      "global": {
+        "branches": 40,
+        "functions": 40,
+        "lines": 40,
+        "statements": 40
+      }
+    }
   }
 }
