@@ -36,6 +36,9 @@ jobs:
               postgres:15-alpine || sudo docker start db
           "
 
+      - name: Wait for Database to be ready
+        run: sleep 5
+
       - name: Deploy and Restart Web App Container
         run: |
           ssh -tt -i ~/.ssh/id_target ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "
