@@ -1,0 +1,19 @@
+[Unit]
+Description=Simple Inventory Web Application Container
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+ExecStartPre=-/usr/bin/docker stop mywebapp
+ExecStartPre=-/usr/bin/docker rm mywebapp
+ExecStartPre=/usr/bin/docker pull ghcr.io/coldat1k/sdt-labs-3-4:stable
+ExecStart=/usr/bin/docker run --name mywebapp \
+  --network backend-net \
+  -v /etc/mywebapp/config.json:/etc/mywebapp/config.json:ro \
+  -p 8000:8000 \
+  ghcr.io/coldat1k/sdt-labs-3-4:stable
+
+[Install]
+WantedBy=multi-user.target
