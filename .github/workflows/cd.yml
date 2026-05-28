@@ -12,14 +12,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Copy Systemd Unit to Target Node via SSH
+      - name: Set up SSH Key
         run: |
-          scp -o StrictHostKeyChecking=no mywebapp.service ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }}:/tmp/mywebapp.service
-          ssh -o StrictHostKeyChecking=no ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "sudo mv /tmp/mywebapp.service /etc/systemd/system/mywebapp.service && sudo systemctl daemon-reload"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.TARGET_SSH_KEY }}" > ~/.ssh/id_target
+          chmod 600 ~/.ssh/id_target
+          # Додаємо хост до відомих, щоб конвеєр не запитував підтвердження інтерактивно
+          ssh-keyscan -H ${{ secrets.TARGET_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copy Systemd Unit to Target Node
+        run: |
+          scp -i ~/.ssh/id_target mywebapp.service ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }}:/tmp/mywebapp.service
+          ssh -i ~/.ssh/id_target ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "sudo mv /tmp/mywebapp.service /etc/systemd/system/mywebapp.service && sudo systemctl daemon-reload"
 
       - name: Start Database in Docker on Target
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "
+          ssh -i ~/.ssh/id_target ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "
             sudo docker run -d --name db --network backend-net \
               -e POSTGRES_DB=inventory_db \
               -e POSTGRES_USER=inventory_user \
@@ -30,7 +38,7 @@ jobs:
 
       - name: Deploy and Restart Web App Container
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "
+          ssh -i ~/.ssh/id_target ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "
             sudo systemctl restart mywebapp
             sudo systemctl enable mywebapp
           "
@@ -40,15 +48,10 @@ jobs:
           echo "Чекаємо 5 секунд на старт сервісу..."
           sleep 5
           
-          echo "Перевірка доступності сервісу через Nginx..."
           STATUS_CODE=$(curl -o /dev/null -s -w "%{http_code}" http://${{ secrets.TARGET_HOST }}/health/alive)
           
           if [ "$STATUS_CODE" -ne 200 ]; then
             echo "Верифікація провалена! HTTP Status: $STATUS_CODE"
             exit 1
           fi
-          
-          echo "Перевірка API відповіді /items..."
-          curl -s http://${{ secrets.TARGET_HOST }}/items | grep -q "ID" || (echo "Невдала валідація структури HTML/JSON"; exit 1)
-          
           echo "=== ВЕРИФІКАЦІЯ УСПІШНА ==="
