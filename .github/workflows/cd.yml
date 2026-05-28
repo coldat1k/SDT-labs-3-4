@@ -23,11 +23,11 @@ jobs:
       - name: Copy Systemd Unit to Target Node
         run: |
           scp -i ~/.ssh/id_target mywebapp.service ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }}:/tmp/mywebapp.service
-          ssh -i ~/.ssh/id_target ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "sudo mv /tmp/mywebapp.service /etc/systemd/system/mywebapp.service && sudo systemctl daemon-reload"
+          ssh -tt -i ~/.ssh/id_target ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "sudo mv /tmp/mywebapp.service /etc/systemd/system/mywebapp.service && sudo systemctl daemon-reload"
 
       - name: Start Database in Docker on Target
         run: |
-          ssh -i ~/.ssh/id_target ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "
+          ssh -tt -i ~/.ssh/id_target ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "
             sudo docker run -d --name db --network backend-net \
               -e POSTGRES_DB=inventory_db \
               -e POSTGRES_USER=inventory_user \
@@ -38,7 +38,7 @@ jobs:
 
       - name: Deploy and Restart Web App Container
         run: |
-          ssh -i ~/.ssh/id_target ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "
+          ssh -tt -i ~/.ssh/id_target ${{ secrets.TARGET_USER }}@${{ secrets.TARGET_HOST }} "
             sudo systemctl restart mywebapp
             sudo systemctl enable mywebapp
           "
@@ -48,7 +48,7 @@ jobs:
           echo "Чекаємо 5 секунд на старт сервісу..."
           sleep 5
           
-          STATUS_CODE=$(curl -o /dev/null -s -w "%{http_code}" http://${{ secrets.TARGET_HOST }}/health/alive)
+          STATUS_CODE=$(curl -o /dev/null -s -w "%{http_code}" http://${{ secrets.TARGET_HOST }}/)
           
           if [ "$STATUS_CODE" -ne 200 ]; then
             echo "Верифікація провалена! HTTP Status: $STATUS_CODE"
