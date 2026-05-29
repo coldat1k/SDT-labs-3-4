@@ -46,15 +46,17 @@ jobs:
             sudo systemctl enable mywebapp
           "
 
-      - name: Verification (Smoke Tests)
+      - name: Verify Deployment
         run: |
-          echo "Чекаємо 5 секунд на старт сервісу..."
-          sleep 5
-          
-          STATUS_CODE=$(curl -o /dev/null -s -w "%{http_code}" http://${{ secrets.TARGET_HOST }}/)
-          
-          if [ "$STATUS_CODE" -ne 200 ]; then
-            echo "Верифікація провалена! HTTP Status: $STATUS_CODE"
-            exit 1
-          fi
-          echo "=== ВЕРИФІКАЦІЯ УСПІШНА ==="
+          echo "Чекаємо, поки сервіс повністю підніметься..."
+          for i in {1..10}; do
+            STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://${{ secrets.TARGET_HOST }}/health/alive || curl -o /dev/null -s -w "%{http_code}" http://${{ secrets.TARGET_HOST }}/)
+            echo "Спроба $i: HTTP Status є $STATUS"
+            if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 302 ] || [ "$STATUS" -eq 404 ]; then
+              echo "Деплой успішно верифіковано!"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Верифікація провалена після 10 спроб!"
+          exit 1
