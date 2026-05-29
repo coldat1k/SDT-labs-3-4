@@ -30,6 +30,7 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "collectCoverage": true,
     "coverageThreshold": {
       "global": {
         "branches": 40,
