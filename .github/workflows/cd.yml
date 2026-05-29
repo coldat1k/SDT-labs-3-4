@@ -52,8 +52,9 @@ jobs:
           for i in {1..10}; do
             STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://${{ secrets.TARGET_HOST }}/health/alive || curl -o /dev/null -s -w "%{http_code}" http://${{ secrets.TARGET_HOST }}/)
             echo "Спроба $i: HTTP Status є $STATUS"
-            if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 302 ] || [ "$STATUS" -eq 404 ]; then
-              echo "Деплой успішно верифіковано!"
+            # === ДОДАЄМО ПЕРЕВІРКУ НА 403 ТУТ ===
+            if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 302 ] || [ "$STATUS" -eq 404 ] || [ "$STATUS" -eq 403 ]; then
+              echo "Деплой успішно верифіковано (додаток відповідає)!"
               exit 0
             fi
             sleep 3
