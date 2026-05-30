@@ -1,0 +1,15 @@
+[Unit]
+Description=Cinema API Web Application (Lab 4 Variant 3)
+After=network.target
+
+[Service]
+Type=simple
+User=app
+WorkingDirectory=/var/www/cinema-api
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+EnvironmentFile=/var/www/cinema-api/.env
+
+[Install]
+WantedBy=multi-user.target
+

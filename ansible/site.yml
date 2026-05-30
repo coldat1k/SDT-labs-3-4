@@ -1,0 +1,21 @@
+---
+# Етап 1. Спільні налаштування для всіх нод
+- name: Apply common infrastructure configurations
+  hosts: all
+  become: yes
+  roles:
+    - common
+
+# Етап 2. Розгортання та ізоляція Бази Даних
+- name: Setup and configure database backend node
+  hosts: db
+  become: yes
+  roles:
+    - db
+
+# Етап 3. Розгортання Веб-застосунку та Налаштування reverse proxy
+- name: Deploy application backend with Nginx reverse proxy
+  hosts: workers
+  become: yes
+  roles:
+    - worker

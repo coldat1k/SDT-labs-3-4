@@ -1,0 +1,36 @@
+---
+# 1. Оновлення кешу пакетів
+- name: Update apt repo and install basic software
+  apt:
+    update_cache: yes
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - ufw
+    state: present
+
+# 2. Створення файлу gradebook із числом N (23) за варіантом
+- name: Create gradebook file with variant source number
+  copy:
+    dest: /home/student/gradebook
+    content: "23\n"
+    owner: root
+    group: root
+    mode: '0644'
+
+# 3. Створення користувача teacher
+- name: Create user teacher
+  user:
+    name: teacher
+    password: "{{ '12345678' | password_hash('sha512') }}"
+    shell: /bin/bash
+    state: present
+
+# 4. Налаштування sudo для teacher (із введенням пароля)
+- name: Configure sudo for teacher
+  copy:
+    dest: /etc/sudoers.d/teacher
+    content: "teacher ALL=(ALL:ALL) ALL"
+    mode: '0440'

@@ -1,0 +1,49 @@
+---
+- name: Install PostgreSQL
+  apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+    state: present
+
+- name: Configure PostgreSQL block to listen on VM IP
+  template:
+    src: postgresql.conf.j2
+    dest: /etc/postgresql/14/main/postgresql.conf
+  notify: restart postgresql
+
+- name: Configure pg_hba.conf to restrict access to worker only
+  template:
+    src: pg_hba.conf.j2
+    dest: /etc/postgresql/14/main/pg_hba.conf
+  notify: restart postgresql
+
+- name: Start and enable PostgreSQL service
+  systemd:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Create DB application user
+  postgresql_user:
+    name: cinema_user
+    password: "cinema_secure_password"
+
+- name: Create Cinema Database
+  postgresql_db:
+    name: cinema_db
+    owner: cinema_user
+
+# Обмеження доступу за допомогою UFW (лише з worker-node)
+- name: Allow PostgreSQL access only from worker node
+  ufw:
+    rule: allow
+    src: 192.168.122.150
+    port: '5432'
+    proto: tcp
+
+- name: Enable UFW firewall
+  ufw:
+    state: enabled
+    policy: deny

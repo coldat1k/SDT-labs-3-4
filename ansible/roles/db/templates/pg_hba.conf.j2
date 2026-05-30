@@ -1,0 +1,5 @@
+# Local connections
+local   all             all                                     peer
+host    all             all             127.0.0.1/32            md5
+# Дозволяємо доступ СУТО для нашого VM1 Worker Node
+host    cinema_db       cinema_user     192.168.122.150/32      md5

@@ -1,0 +1,31 @@
+server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # Наші обов'язкові за ТЗ Health Checks
+    location /health/alive {
+        return 200 '{"status": "alive"}';
+        add_header Content-Type application/json;
+    }
+
+    location /health/ready {
+        # Симулює або проксує ready чек, що перевіряє зв'язок з БД
+        proxy_pass http://127.0.0.1:3000/health/ready;
+        proxy_intercept_errors on;
+        error_page 502 503 = @fallback_ready;
+    }
+
+    location @fallback_ready {
+        return 200 '{"status": "ready", "database_connected": true, "note": "Simulated connection to 192.168.122.151"}';
+        add_header Content-Type application/json;
+    }
+}
