@@ -11,12 +11,12 @@
     name: operator
     password: "{{ '12345678' | password_hash('sha512') }}"
     shell: /bin/bash
-
+    
 - name: Configure strict sudo restrictions for operator
   copy:
     dest: /etc/sudoers.d/operator
     content: |
-      operator ALL=(ALL) NOPASSWD: /usr/bin/systemctl start cinema, /usr/bin/systemctl stop cinema, /usr/bin/systemctl restart cinema, /usr/bin/systemctl status cinema, /usr/bin/systemctl reload nginx
+      operator ALL=(ALL) NOPASSWD: /usr/bin/systemctl start {{ app_name }}, /usr/bin/systemctl stop {{ app_name }}, /usr/bin/systemctl restart {{ app_name }}, /usr/bin/systemctl status {{ app_name }}, /usr/bin/systemctl reload nginx
     mode: '0440'
 
 - name: Install Node.js runtime and Nginx
@@ -66,7 +66,7 @@
     src: "/etc/nginx/sites-available/{{ app_name }}"
     dest: "/etc/nginx/sites-enabled/{{ app_name }}"
     state: link
-    force: yes
+    force: yes  
   notify: restart nginx
 
 - name: Remove default nginx configuration block
