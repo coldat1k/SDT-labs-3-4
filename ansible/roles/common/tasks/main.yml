@@ -1,5 +1,4 @@
 ---
-# 1. Оновлення кешу пакетів
 - name: Update apt repo and install basic software
   apt:
     update_cache: yes
@@ -11,7 +10,6 @@
       - ufw
     state: present
 
-# 2. Створення файлу gradebook із числом N (23) за варіантом
 - name: Create gradebook file with variant source number
   copy:
     dest: /home/student/gradebook
@@ -20,7 +18,6 @@
     group: root
     mode: '0644'
 
-# 3. Створення користувача teacher
 - name: Create user teacher
   user:
     name: teacher
@@ -28,7 +25,6 @@
     shell: /bin/bash
     state: present
 
-# 4. Налаштування sudo для teacher (із введенням пароля)
 - name: Configure sudo for teacher
   copy:
     dest: /etc/sudoers.d/teacher

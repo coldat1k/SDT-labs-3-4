@@ -11,25 +11,21 @@ terraform {
   }
 }
 
-# 1. Симуляція завантаження базового образу (створимо маркер-файл)
 resource "local_file" "ubuntu_base" {
   filename = "${path.module}/ubuntu-base.qcow2.meta"
   content  = "URL: https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img\nFormat: qcow2"
 }
 
-# 2. Створення окремого диска для VM1 (worker)
 resource "local_file" "worker_volume" {
   filename = "${path.module}/worker-volume.qcow2"
   content  = "Base Volume: ${local_file.ubuntu_base.filename}\nSize: 10737418240"
 }
 
-# 3. Створення окремого диска для VM2 (db)
 resource "local_file" "db_volume" {
   filename = "${path.module}/db-volume.qcow2"
   content  = "Base Volume: ${local_file.ubuntu_base.filename}\nSize: 10737418240"
 }
 
-# 4. Налаштування та генерація cloud-init для VM1 (worker-node)
 resource "local_file" "worker_init" {
   filename = "${path.module}/worker-init.cfg"
   content  = <<EOF
@@ -44,7 +40,6 @@ users:
 EOF
 }
 
-# 5. Налаштування та генерація cloud-init для VM2 (db-node)
 resource "local_file" "db_init" {
   filename = "${path.module}/db-init.cfg"
   content  = <<EOF
@@ -59,7 +54,6 @@ users:
 EOF
 }
 
-# 6. Емуляція розгортання віртуальної машини VM1 (worker)
 resource "null_resource" "worker_domain" {
   depends_on = [local_file.worker_volume, local_file.worker_init]
 
@@ -77,7 +71,6 @@ resource "null_resource" "worker_domain" {
   }
 }
 
-# 7. Емуляція розгортання віртуальної машини VM2 (db)
 resource "null_resource" "db_domain" {
   depends_on = [local_file.db_volume, local_file.db_init]
 
@@ -95,7 +88,6 @@ resource "null_resource" "db_domain" {
   }
 }
 
-# 8. Вивід згенерованих IP-адрес для звіту лаби
 output "worker_node_ip" {
   value       = "192.168.122.150 (Simulated)"
   description = "IP address of the worker node"

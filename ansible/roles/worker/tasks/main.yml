@@ -1,5 +1,4 @@
 ---
-# 1. Створення користувачів
 - name: Create system user app (for running background application)
   user:
     name: app
@@ -13,7 +12,6 @@
     password: "{{ '12345678' | password_hash('sha512') }}"
     shell: /bin/bash
 
-# 2. Обмеження SUDO для operator (ТІЛЬКИ вказані у ТЗ команди без пароля)
 - name: Configure strict sudo restrictions for operator
   copy:
     dest: /etc/sudoers.d/operator
@@ -21,7 +19,6 @@
       operator ALL=(ALL) NOPASSWD: /usr/bin/systemctl start cinema, /usr/bin/systemctl stop cinema, /usr/bin/systemctl restart cinema, /usr/bin/systemctl status cinema, /usr/bin/systemctl reload nginx
     mode: '0440'
 
-# 3. Встановлення Node.js та Nginx
 - name: Install Node.js runtime and Nginx
   apt:
     name:
@@ -31,7 +28,6 @@
       - nginx
     state: present
 
-# 4. Симуляція деплою Cinema API з Лаби №1
 - name: Create application deployment directory
   file:
     path: /var/www/cinema-api
@@ -47,7 +43,6 @@
     owner: app
     group: app
 
-# 5. Створення Systemd сервісу для застосунку
 - name: Install systemd service unit for Cinema API
   template:
     src: cinema.service.j2
@@ -60,7 +55,6 @@
     state: started
     enabled: yes
 
-# 6. Налаштування Nginx Reverse Proxy
 - name: Configure Nginx reverse proxy server block via template
   template:
     src: nginx.conf.j2
