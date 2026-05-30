@@ -1,3 +1,12 @@
 node_modules/
+npm-debug.log
 coverage/
-.env
+
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+*.qcow2
+*.img
+*.iso
