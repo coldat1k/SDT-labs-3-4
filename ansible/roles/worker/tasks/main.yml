@@ -22,7 +22,6 @@
 - name: Install Node.js runtime and Nginx
   apt:
     name:
-      - Lauren
       - nodejs
       - npm
       - nginx
@@ -30,7 +29,7 @@
 
 - name: Create application deployment directory
   file:
-    path: /var/www/cinema-api
+    path: "/var/www/{{ app_name }}"
     state: directory
     owner: app
     group: app
@@ -39,33 +38,35 @@
 - name: Generate application environment config with database IP mapping
   template:
     src: env.j2
-    dest: /var/www/cinema-api/.env
+    dest: "/var/www/{{ app_name }}/.env"
     owner: app
     group: app
 
-- name: Install systemd service unit for Cinema API
+- name: Install systemd service unit for Web App
   template:
-    src: cinema.service.j2
-    dest: /etc/systemd/system/cinema.service
+    src: webapp.service.j2
+    dest: "/etc/systemd/system/{{ app_name }}.service"
   notify: reload systemd
 
-- name: Start Cinema API service
+- name: Start Web App service
   systemd:
-    name: cinema
+    name: "{{ app_name }}"
     state: started
     enabled: yes
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Configure Nginx reverse proxy server block via template
   template:
     src: nginx.conf.j2
-    dest: /etc/nginx/sites-available/cinema
+    dest: "/etc/nginx/sites-available/{{ app_name }}"
   notify: restart nginx
 
 - name: Enable Nginx server block configuration
   file:
-    src: /etc/nginx/sites-available/cinema
-    dest: /etc/nginx/sites-enabled/cinema
+    src: "/etc/nginx/sites-available/{{ app_name }}"
+    dest: "/etc/nginx/sites-enabled/{{ app_name }}"
     state: link
+    force: yes
   notify: restart nginx
 
 - name: Remove default nginx configuration block

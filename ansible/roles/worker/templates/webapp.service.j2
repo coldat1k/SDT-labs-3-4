@@ -1,0 +1,14 @@
+[Unit]
+Description={{ app_name }} Web Application (Lab 4)
+After=network.target
+
+[Service]
+Type=simple
+User=app
+WorkingDirectory=/var/www/{{ app_name }}
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+EnvironmentFile=/var/www/{{ app_name }}/.env
+
+[Install]
+WantedBy=multi-user.target

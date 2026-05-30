@@ -2,10 +2,10 @@
   postgresql_user:
     name: cinema_user
     password: "cinema_secure_password"
-  become_user: postgres  # <--- ДОДАЄМО ЦЕЙ РЯДОК
+  become_user: postgres 
 
 - name: Create Cinema Database
   postgresql_db:
     name: cinema_db
     owner: cinema_user
-  become_user: postgres  # <--- ДОДАЄМО ЦЕЙ РЯДОК
+  become_user: postgres 
